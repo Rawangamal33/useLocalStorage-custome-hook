@@ -1,0 +1,28 @@
+import { useEffect, useState } from "react";
+const getSavedValue = (key, initialValue) => {
+  // SSR check
+  if (typeof window === "undefined") return initialValue;
+
+  try {
+    const savedValue = localStorage.getItem(key);
+    if (savedValue !== null) {
+      return JSON.parse(savedValue);
+    }
+  } catch (err) {
+    console.error("Error parsing localStorage key:", key, err);
+    localStorage.removeItem(key); // clean bad data
+  }
+  if (initialValue instanceof Function) return initialValue();
+  return initialValue;
+};
+const useLocalStorage = (key, initialValue) => {
+  const [value, setValue] = useState(() => {
+    return getSavedValue(key, initialValue);
+  });
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [value]);
+  return [value, setValue];
+};
+
+export default useLocalStorage;
